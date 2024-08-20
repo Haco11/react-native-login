@@ -10,6 +10,7 @@ export default function LoginPage() {
   const handleLogin = async () => {
     if (code === "OPP2024") {
       await AsyncStorage.setItem("sessionToken", code);
+      await AsyncStorage.setItem("loginTime", Date.now().toString());
       router.replace("/member");
     } else {
       alert("Invalid code, please try again.");

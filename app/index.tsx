@@ -1,46 +1,39 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
+import React, { useEffect } from "react";
+import { View, ActivityIndicator } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 
-export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+export default function Index() {
   const router = useRouter();
 
   useEffect(() => {
     const checkAuth = async () => {
-      const token = await AsyncStorage.getItem("authToken");
-      if (token) {
-        setIsAuthenticated(true);
-        router.replace("/member");
+      const sessionToken = await AsyncStorage.getItem("sessionToken");
+      const loginTime = await AsyncStorage.getItem("loginTime");
+
+      if (sessionToken && loginTime) {
+        const currentTime = Date.now();
+        const loginTimestamp = parseInt(loginTime);
+
+        if (currentTime - loginTimestamp < 60 * 1000) {
+          router.replace("/member");
+        } else {
+          // Session expired, clear storage and redirect to login
+          await AsyncStorage.removeItem("sessionToken");
+          await AsyncStorage.removeItem("loginTime");
+          router.replace("/login");
+        }
       } else {
-        setIsAuthenticated(false);
+        router.replace("/login");
       }
     };
 
     checkAuth();
   }, []);
 
-  if (isAuthenticated === null) {
-    return (
-      <View className="flex-1 justify-center items-center">
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
-    );
-  }
-
   return (
     <View className="flex-1 justify-center items-center">
-      <Text className="text-lg">Login Page</Text>
-      <TouchableOpacity
-        onPress={async () => {
-          await AsyncStorage.setItem("authToken", "OPP2024");
-          setIsAuthenticated(true);
-          router.replace("/member");
-        }}
-        className="bg-yellow-400 w-full p-4 rounded-lg shadow-lg">
-        <Text className="text-black text-lg font-bold text-center">Log In</Text>
-      </TouchableOpacity>
+      <ActivityIndicator size="large" color="#0000ff" />
     </View>
   );
 }
